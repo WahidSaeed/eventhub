@@ -1,0 +1,465 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #EDEAE1;
+  --ink: #1B1B1B;
+  --ink-soft: #4A4A46;
+  --teal: #2F5D62;
+  --rule: #D8D3C6;
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, nav, button, label, th, .display {
+    font-family: 'Archivo', system-ui, sans-serif;
+  }
+
+  a {
+    color: var(--teal);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Motion is off by default. The one deliberate moment is the RSVP
+     confirmation, which opts in explicitly via .confirm-in. */
+  *, *::before, *::after {
+    transition: none;
+  }
+}
+
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 0 32px 0 68px;
+    position: relative;
+  }
+
+  /* Masthead and sub bar */
+  .masthead {
+    border-bottom: 3px solid var(--ink);
+  }
+
+  .masthead-title {
+    color: var(--ink);
+    text-decoration: none;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.5rem, 4vw, 34px);
+    letter-spacing: -0.01em;
+    line-height: 1;
+    text-transform: uppercase;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .masthead-mark {
+    color: var(--teal);
+    font-size: 20px;
+    position: relative;
+    top: -2px;
+  }
+
+  .masthead-meta {
+    text-align: right;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .masthead-meta b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* Account links sit above the edition block so the category rail below
+     stays a single uncrowded line. */
+  .masthead-account {
+    display: flex;
+    justify-content: flex-end;
+    gap: 18px;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .masthead-account a,
+  .masthead-account button {
+    color: var(--ink-soft);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .masthead-account a:hover,
+  .masthead-account button:hover {
+    color: var(--teal);
+    text-decoration: none;
+  }
+
+  .subbar {
+    border-bottom: 1px solid var(--rule);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  /* Borderless underline field, so filtering reads as part of the rail
+     rather than a boxed form. */
+  .find {
+    border: none;
+    border-bottom: 1px solid var(--ink-soft);
+    background: none;
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-style: italic;
+    font-size: 14px;
+    padding: 2px 0;
+    width: 190px;
+    outline: none;
+    color: var(--ink);
+  }
+
+  .find::placeholder {
+    color: #9a968a;
+  }
+
+  .find-date {
+    width: 125px;
+    font-style: normal;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12px;
+  }
+
+  .subbar-link {
+    color: var(--ink-soft);
+    padding: 12px 0;
+    display: inline-block;
+    cursor: pointer;
+  }
+
+  .subbar-link.is-active {
+    color: var(--ink);
+    border-bottom: 1px solid var(--teal);
+    padding-bottom: 9px;
+  }
+
+  /* Day grouping */
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 16.5px;
+    letter-spacing: 0.005em;
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 9px;
+    margin-bottom: 2px;
+  }
+
+  .day-count {
+    font-weight: 500;
+    color: var(--ink-soft);
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* The listing row: name on the left, time and places on the right, joined
+     by a dotted leader that absorbs the free space between them. */
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 18px 0;
+    border-bottom: 1px dashed var(--rule);
+  }
+
+  .row:last-child {
+    border-bottom: none;
+  }
+
+  .row-num {
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    width: 26px;
+    flex-shrink: 0;
+    padding-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .col-main {
+    flex-shrink: 0;
+    max-width: 300px;
+    min-width: 0;
+  }
+
+  /* Sits against the first line of each column so the dots run between the
+     event name and its time, not along the bottom of the whole row. */
+  .leader {
+    flex: 1;
+    border-bottom: 1px dotted var(--rule);
+    position: relative;
+    top: -6px;
+    min-width: 20px;
+  }
+
+  .col-end {
+    flex-shrink: 0;
+    text-align: right;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .col-end .time {
+    color: var(--ink-soft);
+  }
+
+  .col-end .price {
+    color: var(--ink);
+    font-weight: 700;
+    margin-left: 10px;
+  }
+
+  .event-name {
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .event-name a,
+  a.event-name {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .event-name a:hover,
+  a.event-name:hover {
+    text-decoration: none;
+    border-bottom: 1px solid var(--teal);
+  }
+
+  .venue {
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+
+  .event-meta {
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  .tag {
+    display: inline-block;
+    margin-top: 7px;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 700;
+    border-left: 2px solid var(--teal);
+    padding-left: 6px;
+  }
+
+  /* Form and button primitives, kept flat and squared off */
+  .field {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--rule);
+    padding: 0.5rem 0.625rem;
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+
+  .field:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: inset 0 0 0 1px var(--teal);
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .btn {
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-quiet {
+    background: transparent;
+    color: var(--ink);
+  }
+
+  .btn-teal {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--paper);
+  }
+
+  .notice {
+    border-left: 2px solid var(--teal);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  .notice-error {
+    border-left-color: #8A2B22;
+    color: #8A2B22;
+  }
+
+  .rule-top {
+    border-top: 1px solid var(--rule);
+  }
+
+  .vol-marker {
+    position: absolute;
+    left: 0;
+    top: 120px;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .vol-marker b {
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  .foot {
+    margin-top: 48px;
+    padding: 22px 0 40px;
+    border-top: 1px solid var(--rule);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+}
+
+/* The single deliberate motion moment: RSVP confirmation. */
+@keyframes confirm-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.confirm-in {
+  animation: confirm-in 400ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-in { animation: none; }
+}
+
+/* Mobile listing: the leader line has no room to read as a leader at this
+   width, so the right hand column stacks under the name instead of being
+   crushed against it. */
+@media (max-width: 640px) {
+  /* The vertical edition marker needs a 68px gutter it cannot earn on a
+     phone, so it is dropped and the gutter comes back as content width. */
+  .shell {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .vol-marker {
+    display: none;
+  }
+
+  .masthead {
+    padding-bottom: 12px;
+  }
+
+  .col-main {
+    max-width: none;
+  }
+
+  .row {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+  }
+
+  .row .leader {
+    display: none;
+  }
+
+  .row .col-main {
+    flex: 1 1 100%;
+  }
+
+  .row .col-end {
+    flex: 1 1 100%;
+    text-align: left;
+  }
+
+  /* Keep the right hand details on one line once they are left aligned. */
+  .row .col-end > div {
+    display: inline;
+  }
+
+  .row .col-end > div + div::before {
+    content: ', ';
+  }
+
+  .row .col-end .flex {
+    display: inline-flex;
+  }
+
+  .row .col-end .flex::before {
+    content: '';
+  }
+
+  .masthead-title {
+    letter-spacing: -0.01em;
+  }
+}

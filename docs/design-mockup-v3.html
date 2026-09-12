@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running Order, Design Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Serif+4:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDEAE1;
+    --ink:#1B1B1B;
+    --ink-soft:#4A4A46;
+    --teal:#2F5D62;
+    --rule:#D8D3C6;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+  }
+  .wrap{ max-width:920px; margin:0 auto; padding:0 32px 0 68px; position:relative; }
+
+  .vol-marker{
+    position:absolute; left:0; top:120px;
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    font-family:'Archivo', sans-serif;
+    font-size:11px; letter-spacing:0.06em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  .vol-marker b{ color:var(--teal); }
+
+  /* MASTHEAD */
+  .masthead{
+    padding:40px 0 18px;
+    display:flex; justify-content:space-between; align-items:flex-end;
+    border-bottom:3px solid var(--ink);
+  }
+  .masthead .title{
+    font-family:'Archivo', sans-serif;
+    font-weight:800;
+    font-size:34px;
+    letter-spacing:-0.01em;
+    text-transform:uppercase;
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .masthead .title span.mark{ color:var(--teal); font-size:20px; position:relative; top:-2px; }
+  .masthead .meta{
+    text-align:right; font-family:'Archivo', sans-serif; font-size:12px; color:var(--ink-soft);
+    line-height:1.6;
+  }
+  .masthead .meta b{ color:var(--ink); }
+
+  .subbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px solid var(--rule);
+    font-family:'Archivo', sans-serif; font-size:12.5px; color:var(--ink-soft);
+  }
+  .subbar .find{
+    border:none; border-bottom:1px solid var(--ink-soft);
+    background:none; font-family:'Source Serif 4'; font-style:italic; font-size:14px;
+    padding:2px 0; width:220px; outline:none; color:var(--ink);
+  }
+  .subbar .find::placeholder{ color:#9a968a; }
+  .subbar nav{ display:flex; gap:22px; }
+  .subbar a{ color:var(--ink-soft); text-decoration:none; }
+  .subbar a.active{ color:var(--ink); border-bottom:1px solid var(--teal); padding-bottom:3px; }
+
+  /* DAY GROUP */
+  .day{
+    margin-top:38px;
+  }
+  .day-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    font-family:'Archivo', sans-serif; font-weight:700; text-transform:uppercase;
+    font-size:16.5px; letter-spacing:0.005em;
+    border-bottom:1.5px solid var(--ink);
+    padding-bottom:9px; margin-bottom:2px;
+  }
+  .day-head .count{ font-weight:500; color:var(--ink-soft); font-size:12px; text-transform:none; letter-spacing:0; }
+
+  /* LISTING ROW */
+  .row{
+    display:flex; align-items:baseline; gap:12px;
+    padding:18px 0;
+    border-bottom:1px dashed var(--rule);
+  }
+  .row:last-child{ border-bottom:none; }
+  .row .no{
+    font-family:'Archivo', sans-serif; font-size:12px; color:var(--ink-soft);
+    width:26px; flex-shrink:0; padding-top:3px;
+  }
+  .row .col-main{ flex-shrink:0; max-width:300px; }
+  .row .name{
+    font-size:19px; font-weight:500;
+  }
+  .row .name a{ color:var(--ink); text-decoration:none; }
+  .row .name a:hover{ border-bottom:1px solid var(--teal); }
+  .row .venue{
+    font-family:'Archivo', sans-serif; font-size:12px; color:var(--ink-soft); margin-top:3px;
+  }
+
+  .row .leader{
+    flex:1; border-bottom:1px dotted var(--rule);
+    position:relative; top:-6px; min-width:20px;
+  }
+
+  .row .col-end{
+    flex-shrink:0; text-align:right; font-family:'Archivo', sans-serif; font-size:12.5px;
+  }
+  .row .time{ color:var(--ink-soft); }
+  .row .price{ color:var(--ink); font-weight:700; margin-left:10px; }
+  .row .tag{
+    display:inline-block; margin-top:7px; font-size:10.5px; letter-spacing:0.03em;
+    color:var(--teal); font-weight:700;
+    border-left:2px solid var(--teal); padding-left:6px;
+  }
+
+  .foot{
+    margin-top:48px; padding:22px 0 40px; border-top:1px solid var(--rule);
+    font-family:'Archivo', sans-serif; font-size:12px; color:var(--ink-soft);
+    display:flex; justify-content:space-between;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="vol-marker"><b>Vol. IV</b> Printed weekly in Berlin</div>
+
+  <div class="masthead">
+    <div class="title"><span class="mark">✳</span> The Running Order</div>
+    <div class="meta">BERLIN EDITION<br><b>Week of Oct 13</b><br>38 listings</div>
+  </div>
+
+  <div class="subbar">
+    <nav>
+      <a href="#" class="active">All</a>
+      <a href="#">Music</a>
+      <a href="#">Food &amp; drink</a>
+      <a href="#">Conference</a>
+      <a href="#">Community</a>
+    </nav>
+    <input class="find" type="text" placeholder="find an event, venue, or city…">
+  </div>
+
+  <div class="day">
+    <div class="day-head">Tuesday, Oct 14 <span class="count">3 listings</span></div>
+
+    <div class="row">
+      <div class="no">1</div>
+      <div class="col-main">
+        <div class="name"><a href="#">Autumn Jazz Night</a></div>
+        <div class="venue">at The Blue Room, Neukölln</div>
+      </div>
+      <div class="leader"></div>
+      <div class="col-end">
+        <span class="time">8:00 PM</span><span class="price">€18</span>
+        <div class="tag">RSVP CLOSES OCT 13</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="no">2</div>
+      <div class="col-main">
+        <div class="name"><a href="#">Second Tuesday Book Club</a></div>
+        <div class="venue">at St. Georges Bookshop</div>
+      </div>
+      <div class="leader"></div>
+      <div class="col-end">
+        <span class="time">7:00 PM</span><span class="price">Free</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="no">3</div>
+      <div class="col-main">
+        <div class="name"><a href="#">Life Drawing, Open Studio</a></div>
+        <div class="venue">at Kreuzberg Art House</div>
+      </div>
+      <div class="leader"></div>
+      <div class="col-end">
+        <span class="time">6:30 PM</span><span class="price">€12</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head">Friday, Oct 17 <span class="count">2 listings</span></div>
+
+    <div class="row">
+      <div class="no">4</div>
+      <div class="col-main">
+        <div class="name"><a href="#">Street Food Expo</a></div>
+        <div class="venue">at Tempelhof Field</div>
+      </div>
+      <div class="leader"></div>
+      <div class="col-end">
+        <span class="time">12:00 PM</span><span class="price">Free</span>
+        <div class="tag">40+ VENDORS</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="no">5</div>
+      <div class="col-main">
+        <div class="name"><a href="#">Late Bar: Vinyl Only</a></div>
+        <div class="venue">at Loophole</div>
+      </div>
+      <div class="leader"></div>
+      <div class="col-end">
+        <span class="time">11:00 PM</span><span class="price">€10</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head">Thursday, Oct 22 <span class="count">1 listing</span></div>
+
+    <div class="row">
+      <div class="no">6</div>
+      <div class="col-main">
+        <div class="name"><a href="#">Product Demo Day</a></div>
+        <div class="venue">at Factory Berlin</div>
+      </div>
+      <div class="leader"></div>
+      <div class="col-end">
+        <span class="time">9:00 AM</span><span class="price">€25</span>
+        <div class="tag">10 FOUNDERS PRESENTING</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>The Running Order is a listings platform, not a ticketing monopoly.</span>
+    <span>Sign in to save your RSVPs</span>
+  </div>
+
+</div>
+</body>
+</html>
