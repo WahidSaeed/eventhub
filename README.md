@@ -101,6 +101,7 @@ Set in `backend/.env`. See `backend/.env.example`.
 | `GOOGLE_MAPS_BROWSER_KEY` | no | Client-side key for the Maps JS API, served to the browser by `/api/config`. |
 | `SENDGRID_API_KEY` | no | Sends RSVP confirmation emails. |
 | `SENDGRID_FROM_EMAIL` | no | Verified sender address for those emails. |
+| `APP_URL` | no | Public address of the app, for example `https://events.example.com`. Adds a View event button to confirmation emails. |
 | `NODE_ENV` | no | Set to `production` in deployment. Also makes session cookies secure-only. |
 | `AUTH_RATE_LIMIT_MAX` | no | Sign-in and signup attempts allowed per IP per 15 minutes. Defaults to 20. |
 
