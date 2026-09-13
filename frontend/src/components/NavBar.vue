@@ -96,7 +96,7 @@ async function signOut() {
           </button>
         </nav>
 
-        <div class="flex items-center gap-4">
+        <div class="subbar-find flex items-center gap-4">
           <input
             class="find find-date"
             type="date"

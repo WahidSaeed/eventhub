@@ -141,7 +141,7 @@ onMounted(load);
 </script>
 
 <template>
-  <div>
+  <div class="mt-10">
     <h1 class="day-header mb-6">Editor</h1>
 
     <p v-if="message" class="notice mb-5">{{ message }}</p>

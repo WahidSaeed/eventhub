@@ -27,7 +27,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="max-w-sm">
+  <div class="max-w-sm mt-10">
     <h1 class="day-header mb-6">Sign in</h1>
 
     <form class="space-y-4" @submit.prevent="submit">

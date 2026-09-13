@@ -33,13 +33,13 @@ onMounted(load);
 </script>
 
 <template>
-  <div>
+  <div class="mt-10">
     <p v-if="loading" class="event-meta">Loading</p>
     <p v-else-if="error" class="notice notice-error">{{ error }}</p>
 
     <article v-else-if="event">
-      <p class="vol-marker mb-2">
-        <RouterLink to="/">Programme</RouterLink>
+      <p class="event-meta mb-2">
+        <RouterLink to="/" class="text-teal underline">Programme</RouterLink>
       </p>
 
       <h1 class="text-3xl font-medium mb-1">{{ event.title }}</h1>

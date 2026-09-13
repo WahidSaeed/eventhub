@@ -64,7 +64,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="mt-10">
     <h1 class="day-header mb-6">Your places</h1>
 
     <p v-if="loading" class="event-meta">Loading</p>
