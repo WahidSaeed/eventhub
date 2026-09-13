@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const validate = require('../middleware/validate');
 const { requireAuth, optionalAuth } = require('../middleware/authMiddleware');
 const { requireAdmin } = require('../middleware/roleMiddleware');
@@ -21,7 +21,14 @@ const eventRules = [
   body('address').optional().isString()
 ];
 
-router.get('/', events.list);
+router.get(
+  '/',
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a whole number from 1'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+  query('order').optional().isIn(['asc', 'desc']).withMessage('Order must be asc or desc'),
+  validate,
+  events.list
+);
 router.get('/:id', param('id').isMongoId(), validate, optionalAuth, events.detail);
 
 router.post('/', requireAuth, requireAdmin, eventRules, validate, events.create);

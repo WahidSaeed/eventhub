@@ -76,9 +76,9 @@ cd backend
 npm test
 ```
 
-39 tests cover signup and login, session cookies, role enforcement, listing
-filters, event validation, RSVP capacity, duplicate RSVPs, waitlist promotion on
-cancellation, and concurrent bookings for the last place. They run against an in-memory MongoDB that
+46 tests cover signup and login, session cookies, role enforcement, listing
+filters, pagination, event validation, RSVP capacity, duplicate RSVPs, waitlist
+promotion on cancellation, and concurrent bookings for the last place. They run against an in-memory MongoDB that
 `mongodb-memory-server` downloads on first use, so no database needs to be
 running. To use a real server instead, set `TEST_MONGO_URI`; its database name
 must contain `test`, because the suite wipes it.
@@ -120,7 +120,7 @@ email is skipped.
 | POST | `/api/auth/login` | Public | Sign in, returns a session cookie |
 | POST | `/api/auth/logout` | User | Clear the session |
 | GET | `/api/auth/me` | Public | Current user, or null |
-| GET | `/api/events` | Public | List events. `?category=&date=&search=&past=true` |
+| GET | `/api/events` | Public | List events. `?category=&date=&search=&past=true&order=asc\|desc&page=&limit=` |
 | GET | `/api/events/:id` | Public | Event detail, including your own RSVP when signed in |
 | POST | `/api/events` | Admin | Create an event, geocoding the address |
 | PUT | `/api/events/:id` | Admin | Update an event, re-geocoding only if the address changed |
@@ -132,6 +132,21 @@ email is skipped.
 | GET | `/api/admin/reports` | Admin | Aggregate statistics |
 | GET | `/api/config` | Public | Browser Maps key for the frontend |
 | GET | `/api/health` | Public | Liveness check |
+
+### Pagination
+
+`GET /api/events` returns every matching event unless `limit` is given, which is
+what the public listing relies on. With `limit` (1 to 100) and optionally `page`
+(from 1), the response gains a `pagination` block:
+
+```json
+{ "events": [...], "pagination": { "page": 2, "pages": 3, "limit": 10, "total": 23 } }
+```
+
+A page past the end is clamped to the last page rather than returning an empty
+list, so the editor recovers when deleting the final entry on its last page. The
+totals respect the same filters as the results. The editor lists the archive
+newest first with `order=desc`, ten entries per page.
 
 ### Price
 

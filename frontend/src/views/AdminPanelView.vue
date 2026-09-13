@@ -7,7 +7,13 @@ import { shortDate, inputDate, timeRange, priceLabel } from '../utils/format';
 const store = useEventsStore();
 const categories = ['music', 'food', 'conference', 'community', 'film', 'talk', 'other'];
 
+const PAGE_SIZE = 10;
+
 const events = ref([]);
+const pagination = ref(null);
+const page = ref(1);
+const paging = ref(false);
+const entriesEl = ref(null);
 const reports = ref(null);
 const loading = ref(true);
 const error = ref('');
@@ -21,16 +27,20 @@ const form = ref(blank());
 const saving = ref(false);
 const editing = computed(() => !!form.value._id);
 
+// past=true so the editor sees the whole archive, newest first, a page at a time.
+async function loadEvents() {
+  const res = await api.get(`/events?past=true&order=desc&limit=${PAGE_SIZE}&page=${page.value}`);
+  events.value = res.events;
+  pagination.value = res.pagination;
+  // The server clamps an out-of-range page, e.g. after deleting the last entry
+  // on the final page, so follow it.
+  page.value = res.pagination.page;
+}
+
 async function load() {
-  loading.value = true;
   error.value = '';
   try {
-    // past=true so the editor sees the full archive, not just what is upcoming.
-    const [eventsRes, reportsRes] = await Promise.all([
-      api.get('/events?past=true'),
-      api.get('/admin/reports')
-    ]);
-    events.value = eventsRes.events;
+    const [, reportsRes] = await Promise.all([loadEvents(), api.get('/admin/reports')]);
     reports.value = reportsRes;
   } catch (err) {
     error.value = err.message;
@@ -38,6 +48,33 @@ async function load() {
     loading.value = false;
   }
 }
+
+// Changing page keeps the current rows on screen until the next set arrives,
+// so the list does not collapse to a loading line and jump the page.
+async function goTo(target) {
+  if (paging.value) return;
+  paging.value = true;
+  error.value = '';
+  const previous = page.value;
+  page.value = target;
+  try {
+    await loadEvents();
+    entriesEl.value?.scrollIntoView({ block: 'start' });
+  } catch (err) {
+    page.value = previous;
+    error.value = err.message;
+  } finally {
+    paging.value = false;
+  }
+}
+
+const rangeLabel = computed(() => {
+  const p = pagination.value;
+  if (!p || !p.total) return '';
+  const first = (p.page - 1) * p.limit + 1;
+  const last = Math.min(p.page * p.limit, p.total);
+  return `${first} to ${last} of ${p.total}`;
+});
 
 function edit(event) {
   form.value = {
@@ -185,7 +222,12 @@ onMounted(load);
     </section>
 
     <section class="mb-12">
-      <h2 class="field-label mb-3">All entries</h2>
+      <h2 ref="entriesEl" class="field-label mb-3 flex items-baseline justify-between">
+        <span>All entries</span>
+        <span v-if="pagination && pagination.total" class="day-count">
+          {{ pagination.total }} {{ pagination.total === 1 ? 'entry' : 'entries' }}
+        </span>
+      </h2>
 
       <p v-if="loading" class="venue">Loading</p>
       <p v-else-if="!events.length" class="venue">No events yet.</p>
@@ -209,6 +251,16 @@ onMounted(load);
           </div>
         </div>
       </article>
+
+      <nav v-if="pagination && pagination.pages > 1" class="pager" aria-label="Entry pages">
+        <button type="button" :disabled="paging || pagination.page === 1" @click="goTo(pagination.page - 1)">
+          Previous
+        </button>
+        <span>{{ rangeLabel }}, page {{ pagination.page }} of {{ pagination.pages }}</span>
+        <button type="button" :disabled="paging || pagination.page === pagination.pages" @click="goTo(pagination.page + 1)">
+          Next
+        </button>
+      </nav>
     </section>
 
     <section v-if="reports">

@@ -17,7 +17,7 @@ function pickEventFields(body) {
 
 exports.list = async (req, res, next) => {
   try {
-    const { category, date, search, past } = req.query;
+    const { category, date, search, past, order } = req.query;
     const query = {};
 
     if (category) query.category = category;
@@ -39,7 +39,24 @@ exports.list = async (req, res, next) => {
       query.$or = [{ title: rx }, { description: rx }, { venueName: rx }];
     }
 
-    const events = await Event.find(query).sort({ date: 1, startTime: 1 }).lean();
+    const direction = order === 'desc' ? -1 : 1;
+    let cursor = Event.find(query).sort({ date: direction, startTime: direction, _id: direction });
+
+    // Pagination is opt-in: without a limit the full list is returned, which is
+    // what the public listing wants. The editor pages through the archive.
+    let pagination = null;
+    if (req.query.limit) {
+      const limit = Number(req.query.limit);
+      const total = await Event.countDocuments(query);
+      const pages = Math.max(1, Math.ceil(total / limit));
+      // Clamp rather than return an empty page, e.g. after deleting the last
+      // entry on the final page.
+      const page = Math.min(Number(req.query.page) || 1, pages);
+      cursor = cursor.skip((page - 1) * limit).limit(limit);
+      pagination = { page, pages, limit, total };
+    }
+
+    const events = await cursor.lean();
 
     // Attach live confirmed counts so the listing can show remaining places.
     const counts = await RSVP.aggregate([
@@ -49,7 +66,8 @@ exports.list = async (req, res, next) => {
     const countMap = Object.fromEntries(counts.map((c) => [c._id.toString(), c.total]));
 
     res.json({
-      events: events.map((e) => ({ ...e, confirmedCount: countMap[e._id.toString()] || 0 }))
+      events: events.map((e) => ({ ...e, confirmedCount: countMap[e._id.toString()] || 0 })),
+      ...(pagination && { pagination })
     });
   } catch (err) {
     next(err);

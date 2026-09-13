@@ -108,3 +108,72 @@ describe('event writes', () => {
     assert.equal(res.body.event.capacity, 10);
   });
 });
+
+describe('pagination', () => {
+  // Five events on consecutive days, so their order is unambiguous.
+  async function fiveEvents() {
+    const { agent: admin } = await h.signedInAdmin();
+    for (let day = 1; day <= 5; day++) {
+      await h.createEvent(admin, { title: `Day ${day}`, date: `2099-07-0${day}` });
+    }
+  }
+  const list = (qs) => h.request(h.app).get(`/api/events?${qs}`);
+  const names = (res) => res.body.events.map((e) => e.title);
+
+  test('returns everything, with no pagination block, when no limit is given', async () => {
+    await fiveEvents();
+    const res = await list('');
+
+    assert.equal(res.body.events.length, 5);
+    assert.equal(res.body.pagination, undefined);
+  });
+
+  test('pages through results and reports the totals', async () => {
+    await fiveEvents();
+
+    const first = await list('limit=2&page=1');
+    const last = await list('limit=2&page=3');
+
+    assert.deepEqual(names(first), ['Day 1', 'Day 2']);
+    assert.deepEqual(first.body.pagination, { page: 1, pages: 3, limit: 2, total: 5 });
+    assert.deepEqual(names(last), ['Day 5']);
+  });
+
+  test('order=desc returns the newest first', async () => {
+    await fiveEvents();
+    const res = await list('limit=2&order=desc');
+
+    assert.deepEqual(names(res), ['Day 5', 'Day 4']);
+  });
+
+  test('a page past the end is clamped to the last page', async () => {
+    await fiveEvents();
+    const res = await list('limit=2&page=99');
+
+    assert.equal(res.body.pagination.page, 3);
+    assert.deepEqual(names(res), ['Day 5']);
+  });
+
+  test('pagination respects filters when counting', async () => {
+    const { agent: admin } = await h.signedInAdmin();
+    await h.createEvent(admin, { title: 'Food One', category: 'food' });
+    await h.createEvent(admin, { title: 'Food Two', category: 'food' });
+    await h.createEvent(admin, { title: 'Music One', category: 'music' });
+
+    const res = await list('category=food&limit=1');
+    assert.equal(res.body.pagination.total, 2);
+    assert.equal(res.body.pagination.pages, 2);
+  });
+
+  test('an empty result still reports one page', async () => {
+    const res = await list('limit=10');
+
+    assert.deepEqual(res.body.pagination, { page: 1, pages: 1, limit: 10, total: 0 });
+  });
+
+  test('rejects invalid page, limit and order values', async () => {
+    for (const qs of ['limit=0', 'limit=101', 'limit=abc', 'page=0', 'page=-1', 'order=sideways']) {
+      assert.equal((await list(qs)).status, 400, `expected 400 for ?${qs}`);
+    }
+  });
+});
