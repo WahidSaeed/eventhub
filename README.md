@@ -23,8 +23,9 @@ docker run -p 3000:3000 --env-file backend/.env eventhub
 
 The app is then at http://localhost:3000 and the API at http://localhost:3000/api/events.
 
-`MONGO_URI` is set by supervisord inside the container and does not need to be
-correct in the env file you pass in.
+`MONGO_URI` and `PORT` are set by supervisord inside the container, so the
+values in the env file you pass in are ignored there. Node always listens on
+3000 in the container, even with `PORT=3100` left in `.env` for local development.
 
 To keep the database between runs, mount a volume:
 
@@ -93,7 +94,7 @@ Set in `backend/.env`. See `backend/.env.example`.
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `PORT` | no | Port Express listens on. Defaults to 3000. |
+| `PORT` | no | Port Express listens on. Defaults to 3000. Supervisord fixes it at 3000 in the container. |
 | `MONGO_URI` | no | Mongo connection string. Supervisord sets this in the container. |
 | `JWT_SECRET` | **yes** | Signs session tokens. The server refuses to start without it. Use a long random string. |
 | `GOOGLE_MAPS_API_KEY` | no | Server-side key for the Geocoding API. Kept secret, never sent to the browser. |
