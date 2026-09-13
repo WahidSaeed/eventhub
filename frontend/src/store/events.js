@@ -1,31 +1,27 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
+import { groupByDay, todayKey } from '../utils/format';
+
+// Search runs as the visitor types, so a slow earlier response must not
+// overwrite a newer one.
+let latestRequest = 0;
 
 export const useEventsStore = defineStore('events', {
   state: () => ({
     events: [],
-    loading: false,
+    loading: true,
     error: '',
+    when: 'upcoming',
     filters: { category: '', date: '', search: '' }
   }),
 
   getters: {
-    // Groups the (already date-sorted) list into consecutive day blocks so the
-    // listing can render one header per day.
-    byDay: (s) => {
-      const groups = [];
-      for (const event of s.events) {
-        const key = new Date(event.date).toISOString().slice(0, 10);
-        const last = groups[groups.length - 1];
-        if (last && last.key === key) last.events.push(event);
-        else groups.push({ key, date: event.date, events: [event] });
-      }
-      return groups;
-    }
+    byDay: (s) => groupByDay(s.events)
   },
 
   actions: {
     async fetch() {
+      const id = ++latestRequest;
       this.loading = true;
       this.error = '';
       try {
@@ -33,19 +29,34 @@ export const useEventsStore = defineStore('events', {
         for (const [k, v] of Object.entries(this.filters)) {
           if (v) params.set(k, v);
         }
+        if (this.when === 'past') {
+          params.set('past', 'true');
+          params.set('order', 'desc');
+        }
         const qs = params.toString();
         const { events } = await api.get(`/events${qs ? `?${qs}` : ''}`);
-        this.events = events;
+        if (id !== latestRequest) return;
+
+        const today = todayKey();
+        this.events = this.when === 'past'
+          ? events.filter((e) => new Date(e.date).toISOString().slice(0, 10) < today)
+          : events;
       } catch (err) {
+        if (id !== latestRequest) return;
         this.error = err.message;
         this.events = [];
       } finally {
-        this.loading = false;
+        if (id === latestRequest) this.loading = false;
       }
     },
 
     setFilter(key, value) {
       this.filters[key] = value;
+      return this.fetch();
+    },
+
+    setWhen(when) {
+      this.when = when;
       return this.fetch();
     },
 

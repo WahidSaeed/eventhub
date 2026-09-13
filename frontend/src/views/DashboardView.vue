@@ -1,23 +1,31 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '../store/auth';
+import DayGroup from '../components/DayGroup.vue';
+import EventCard from '../components/EventCard.vue';
+import Icon from '../components/Icon.vue';
 import api from '../services/api';
-import { dayHeading, timeRange } from '../utils/format';
+import { groupByDay } from '../utils/format';
 
 const auth = useAuthStore();
 const upcoming = ref([]);
 const past = ref([]);
 const loading = ref(true);
 const error = ref('');
+const tab = ref('upcoming');
 
 const profile = ref({ name: '', email: '', password: '' });
 const profileMessage = ref('');
 const profileError = ref('');
 const savingProfile = ref(false);
 
+const firstName = computed(() => (auth.user?.name || '').split(' ')[0]);
+const groups = computed(() =>
+  groupByDay(tab.value === 'upcoming' ? upcoming.value : past.value, (rsvp) => rsvp.event.date)
+);
+
 async function load() {
-  loading.value = true;
   try {
     const data = await api.get('/users/me/dashboard');
     upcoming.value = data.upcoming;
@@ -30,7 +38,7 @@ async function load() {
 }
 
 async function cancelRsvp(rsvp) {
-  if (!confirm(`Cancel your place at ${rsvp.event.title}?`)) return;
+  if (!confirm(`Cancel your registration for ${rsvp.event.title}?`)) return;
   try {
     await api.del(`/rsvps/${rsvp._id}`);
     await load();
@@ -64,81 +72,104 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mt-10">
-    <h1 class="day-header mb-6">Your places</h1>
+  <div class="page">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]">Your events</h1>
+        <p class="mt-1 text-ink-2">Everything you have registered for, {{ firstName }}.</p>
+      </div>
 
-    <p v-if="loading" class="event-meta">Loading</p>
-    <p v-else-if="error" class="notice notice-error mb-6">{{ error }}</p>
+      <div class="tabs" role="tablist" aria-label="Event timing">
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          :class="{ 'is-active': tab === 'upcoming' }"
+          :aria-selected="tab === 'upcoming'"
+          @click="tab = 'upcoming'"
+        >
+          Upcoming<span v-if="upcoming.length" class="ml-1.5 text-ink-3">{{ upcoming.length }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          :class="{ 'is-active': tab === 'past' }"
+          :aria-selected="tab === 'past'"
+          @click="tab = 'past'"
+        >
+          Past
+        </button>
+      </div>
+    </header>
 
-    <template v-if="!loading">
-      <section class="mb-10">
-        <h2 class="field-label mb-2">Coming up</h2>
+    <p v-if="error" class="notice notice-error mb-6">{{ error }}</p>
 
-        <p v-if="!upcoming.length" class="event-meta">
-          Nothing booked yet. <RouterLink to="/">Browse the programme</RouterLink>.
-        </p>
+    <div v-if="loading" class="space-y-3" aria-busy="true">
+      <div v-for="n in 2" :key="n" class="card h-[130px] animate-pulse bg-white/60"></div>
+    </div>
 
-        <article v-for="rsvp in upcoming" :key="rsvp._id" class="row">
-          <div class="col-main">
-            <RouterLink :to="`/events/${rsvp.event._id}`" class="event-name block hover:underline">
-              {{ rsvp.event.title }}
-            </RouterLink>
-            <p class="event-meta">
-              {{ dayHeading(rsvp.event.date) }}<span v-if="timeRange(rsvp.event.startTime, rsvp.event.endTime)">, {{ timeRange(rsvp.event.startTime, rsvp.event.endTime) }}</span>
-            </p>
-          </div>
+    <div v-else-if="!groups.length" class="card px-6 py-14 text-center">
+      <span class="icon-tile mx-auto"><Icon name="ticket" class="h-5 w-5" /></span>
+      <h2 class="mt-4 text-lg font-semibold">{{ tab === 'upcoming' ? 'No upcoming events' : 'No past events' }}</h2>
+      <p class="mt-1 text-ink-2">
+        {{ tab === 'upcoming' ? 'Events you register for will show up here.' : 'Events you attended will show up here.' }}
+      </p>
+      <RouterLink v-if="tab === 'upcoming'" to="/" class="btn mt-5">Discover events</RouterLink>
+    </div>
 
-          <span class="leader" aria-hidden="true"></span>
-
-          <div class="col-end">
-            <div :class="rsvp.status === 'waitlisted' ? 'tag' : ''">{{ rsvp.status }}</div>
-            <div>{{ rsvp.guestsCount }} {{ rsvp.guestsCount === 1 ? 'guest' : 'guests' }}</div>
-            <button type="button" class="underline text-ink-soft" @click="cancelRsvp(rsvp)">Cancel</button>
-          </div>
-        </article>
-      </section>
-
-      <section class="mb-10">
-        <h2 class="field-label mb-2">Already happened</h2>
-
-        <p v-if="!past.length" class="event-meta">No past events yet.</p>
-
-        <article v-for="rsvp in past" :key="rsvp._id" class="row">
-          <div class="col-main">
-            <RouterLink :to="`/events/${rsvp.event._id}`" class="event-name block hover:underline">
-              {{ rsvp.event.title }}
-            </RouterLink>
-            <p class="event-meta">{{ dayHeading(rsvp.event.date) }}</p>
-          </div>
-          <span class="leader" aria-hidden="true"></span>
-          <div class="col-end">{{ rsvp.status }}</div>
-        </article>
-      </section>
+    <template v-else>
+      <DayGroup v-for="group in groups" :key="group.key" :date="group.date">
+        <EventCard
+          v-for="rsvp in group.items"
+          :key="rsvp._id"
+          :event="rsvp.event"
+          :status="rsvp.status"
+          :guests="rsvp.guestsCount"
+        >
+          <template v-if="tab === 'upcoming'" #actions>
+            <button type="button" class="btn btn-ghost btn-sm -ml-2.5" @click="cancelRsvp(rsvp)">
+              <Icon name="x" class="h-3.5 w-3.5" />Cancel registration
+            </button>
+          </template>
+        </EventCard>
+      </DayGroup>
     </template>
 
-    <section class="max-w-sm">
-      <h2 class="day-header mb-4">Your details</h2>
+    <section class="mt-12">
+      <h2 class="text-lg font-semibold">Account</h2>
+      <p class="mb-4 text-sm text-ink-2">Update your name, email or password.</p>
 
-      <form class="space-y-4" @submit.prevent="saveProfile">
+      <form class="card grid gap-4 p-5 sm:grid-cols-2" @submit.prevent="saveProfile">
         <div>
-          <label for="pname" class="field-label">Name</label>
-          <input id="pname" v-model="profile.name" class="field" type="text" />
+          <label for="pname" class="label">Name</label>
+          <input id="pname" v-model="profile.name" class="input" type="text" autocomplete="name" />
         </div>
         <div>
-          <label for="pemail" class="field-label">Email</label>
-          <input id="pemail" v-model="profile.email" class="field" type="email" />
+          <label for="pemail" class="label">Email</label>
+          <input id="pemail" v-model="profile.email" class="input" type="email" autocomplete="email" />
         </div>
-        <div>
-          <label for="ppass" class="field-label">New password</label>
-          <input id="ppass" v-model="profile.password" class="field" type="password" minlength="8" placeholder="Leave blank to keep current" />
+        <div class="sm:col-span-2">
+          <label for="ppass" class="label">New password</label>
+          <input
+            id="ppass"
+            v-model="profile.password"
+            class="input"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Leave blank to keep your current password"
+          />
         </div>
 
-        <p v-if="profileMessage" class="notice">{{ profileMessage }}</p>
-        <p v-if="profileError" class="notice notice-error">{{ profileError }}</p>
+        <p v-if="profileMessage" class="notice sm:col-span-2">{{ profileMessage }}</p>
+        <p v-if="profileError" class="notice notice-error sm:col-span-2">{{ profileError }}</p>
 
-        <button class="btn" type="submit" :disabled="savingProfile">
-          {{ savingProfile ? 'Saving' : 'Save details' }}
-        </button>
+        <div class="sm:col-span-2">
+          <button class="btn" type="submit" :disabled="savingProfile">
+            {{ savingProfile ? 'Saving…' : 'Save changes' }}
+          </button>
+        </div>
       </form>
     </section>
   </div>

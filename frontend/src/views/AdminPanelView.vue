@@ -1,11 +1,14 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { RouterLink } from 'vue-router';
+import Cover from '../components/Cover.vue';
+import Icon from '../components/Icon.vue';
 import { useEventsStore } from '../store/events';
 import api from '../services/api';
-import { shortDate, inputDate, timeRange, priceLabel } from '../utils/format';
+import { CATEGORIES, categoryMeta, coverGradient } from '../utils/categories';
+import { shortDate, inputDate, priceLabel } from '../utils/format';
 
 const store = useEventsStore();
-const categories = ['music', 'food', 'conference', 'community', 'film', 'talk', 'other'];
 
 const PAGE_SIZE = 10;
 
@@ -14,6 +17,7 @@ const pagination = ref(null);
 const page = ref(1);
 const paging = ref(false);
 const entriesEl = ref(null);
+const formEl = ref(null);
 const reports = ref(null);
 const loading = ref(true);
 const error = ref('');
@@ -73,8 +77,26 @@ const rangeLabel = computed(() => {
   if (!p || !p.total) return '';
   const first = (p.page - 1) * p.limit + 1;
   const last = Math.min(p.page * p.limit, p.total);
-  return `${first} to ${last} of ${p.total}`;
+  return `${first}–${last} of ${p.total}`;
 });
+
+const stats = computed(() => {
+  const r = reports.value;
+  if (!r) return [];
+  return [
+    { label: 'Events', value: r.totalEvents, icon: 'calendar' },
+    { label: 'Registered people', value: r.totalUsers, icon: 'users' },
+    { label: 'Confirmed places', value: r.rsvpsByStatus.confirmed || 0, icon: 'ticket' }
+  ];
+});
+
+const categoryMax = computed(() =>
+  Math.max(1, ...(reports.value?.eventsByCategory || []).map((row) => row.count))
+);
+
+function scrollToForm() {
+  formEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 function edit(event) {
   form.value = {
@@ -91,13 +113,18 @@ function edit(event) {
     price: event.price || 0,
     note: event.note || ''
   };
-  window.scrollTo({ top: 0 });
+  scrollToForm();
 }
 
 function resetForm() {
   form.value = blank();
   message.value = '';
   error.value = '';
+}
+
+function startNew() {
+  resetForm();
+  scrollToForm();
 }
 
 async function save() {
@@ -141,165 +168,200 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="mt-10">
-    <h1 class="day-header mb-6">Editor</h1>
+  <div class="page page-wide">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]">Editor</h1>
+        <p class="mt-1 text-ink-2">Publish events, keep them up to date and see how they are doing.</p>
+      </div>
+      <button type="button" class="btn" @click="startNew"><Icon name="plus" class="h-4 w-4" />New event</button>
+    </header>
 
-    <p v-if="message" class="notice mb-5">{{ message }}</p>
-    <p v-if="error" class="notice notice-error mb-5">{{ error }}</p>
+    <p v-if="message" class="notice mb-4">{{ message }}</p>
+    <p v-if="error" class="notice notice-error mb-4">{{ error }}</p>
 
-    <section class="mb-12">
-      <h2 class="field-label mb-3">{{ editing ? 'Edit entry' : 'Add an entry' }}</h2>
-
-      <form class="grid gap-4 sm:grid-cols-2 max-w-3xl" @submit.prevent="save">
-        <div class="sm:col-span-2">
-          <label for="t" class="field-label">Title</label>
-          <input id="t" v-model="form.title" class="field" type="text" required minlength="3" />
-        </div>
-
-        <div class="sm:col-span-2">
-          <label for="d" class="field-label">Description</label>
-          <textarea id="d" v-model="form.description" class="field" rows="3"></textarea>
-        </div>
-
+    <div v-if="reports" class="mb-8 grid gap-3 sm:grid-cols-3">
+      <div v-for="stat in stats" :key="stat.label" class="card flex items-center gap-3 p-4">
+        <span class="icon-tile"><Icon :name="stat.icon" class="h-5 w-5" /></span>
         <div>
-          <label for="c" class="field-label">Category</label>
-          <select id="c" v-model="form.category" class="field">
-            <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-          </select>
+          <p class="text-2xl font-semibold leading-none tabular-nums">{{ stat.value }}</p>
+          <p class="mt-1 text-sm text-ink-2">{{ stat.label }}</p>
+        </div>
+      </div>
+    </div>
+
+    <section ref="formEl" class="card mb-10 scroll-mt-20 overflow-hidden">
+      <div class="flex items-center justify-between border-b border-line px-5 py-3">
+        <h2 class="font-semibold">{{ editing ? 'Edit event' : 'Create event' }}</h2>
+        <button v-if="editing" type="button" class="btn btn-ghost btn-sm" @click="resetForm">Cancel edit</button>
+      </div>
+
+      <form class="grid gap-6 p-5 md:grid-cols-[180px_minmax(0,1fr)]" @submit.prevent="save">
+        <div class="max-w-[180px]">
+          <Cover
+            :category="form.category"
+            :seed="form._id || ''"
+            size="lg"
+            class="aspect-square w-full rounded-xl"
+          />
+          <p class="hint">Cover art follows the category.</p>
         </div>
 
-        <div>
-          <label for="dt" class="field-label">Date</label>
-          <input id="dt" v-model="form.date" class="field" type="date" required />
-        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label for="t" class="label">Event name</label>
+            <input id="t" v-model="form.title" class="input font-medium" type="text" required minlength="3" placeholder="Autumn Jazz Night" />
+          </div>
 
-        <div>
-          <label for="st" class="field-label">Start time</label>
-          <input id="st" v-model="form.startTime" class="field" type="time" />
-        </div>
+          <div class="sm:col-span-2">
+            <label for="d" class="label">Description</label>
+            <textarea id="d" v-model="form.description" class="input" rows="3" placeholder="What should people know before they come?"></textarea>
+          </div>
 
-        <div>
-          <label for="et" class="field-label">End time</label>
-          <input id="et" v-model="form.endTime" class="field" type="time" />
-        </div>
+          <div>
+            <label for="c" class="label">Category</label>
+            <select id="c" v-model="form.category" class="input">
+              <option v-for="c in CATEGORIES" :key="c.value" :value="c.value">{{ c.label }}</option>
+            </select>
+          </div>
 
-        <div>
-          <label for="v" class="field-label">Venue name</label>
-          <input id="v" v-model="form.venueName" class="field" type="text" />
-        </div>
+          <div>
+            <label for="dt" class="label">Date</label>
+            <input id="dt" v-model="form.date" class="input" type="date" required />
+          </div>
 
-        <div>
-          <label for="cap" class="field-label">Capacity</label>
-          <input id="cap" v-model="form.capacity" class="field" type="number" min="0" />
-          <p class="venue mt-1">Zero means no limit.</p>
-        </div>
+          <div>
+            <label for="st" class="label">Start time</label>
+            <input id="st" v-model="form.startTime" class="input" type="time" />
+          </div>
 
-        <div>
-          <label for="note" class="field-label">Listing note</label>
-          <input id="note" v-model="form.note" class="field" type="text" maxlength="40" />
-          <p class="venue mt-1">Optional teal tag on the listing, 40 characters.</p>
-        </div>
+          <div>
+            <label for="et" class="label">End time</label>
+            <input id="et" v-model="form.endTime" class="input" type="time" />
+          </div>
 
-        <div>
-          <label for="price" class="field-label">Price</label>
-          <input id="price" v-model="form.price" class="field" type="number" min="0" step="0.01" />
-          <p class="venue mt-1">Zero shows as Free.</p>
-        </div>
+          <div>
+            <label for="v" class="label">Venue name</label>
+            <input id="v" v-model="form.venueName" class="input" type="text" placeholder="The Blue Room" />
+          </div>
 
-        <div class="sm:col-span-2">
-          <label for="a" class="field-label">Address</label>
-          <input id="a" v-model="form.address" class="field" type="text" />
-          <p class="venue mt-1">Geocoded to map coordinates when saved.</p>
-        </div>
+          <div>
+            <label for="a" class="label">Address</label>
+            <input id="a" v-model="form.address" class="input" type="text" placeholder="Street, city" />
+            <p class="hint">Placed on the map when saved.</p>
+          </div>
 
-        <div class="sm:col-span-2 flex flex-wrap gap-3">
-          <button class="btn" type="submit" :disabled="saving">
-            {{ saving ? 'Saving' : editing ? 'Save changes' : 'Add entry' }}
-          </button>
-          <button v-if="editing" class="btn btn-quiet" type="button" @click="resetForm">Cancel edit</button>
+          <div>
+            <label for="cap" class="label">Capacity</label>
+            <input id="cap" v-model="form.capacity" class="input" type="number" min="0" />
+            <p class="hint">Zero means no limit.</p>
+          </div>
+
+          <div>
+            <label for="price" class="label">Price (€)</label>
+            <input id="price" v-model="form.price" class="input" type="number" min="0" step="0.01" />
+            <p class="hint">Zero shows as Free.</p>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label for="note" class="label">Highlight badge</label>
+            <input id="note" v-model="form.note" class="input" type="text" maxlength="40" placeholder="Doors 19:30" />
+            <p class="hint">Optional, up to 40 characters. Shown as a badge on the event.</p>
+          </div>
+
+          <div class="flex flex-wrap gap-2 pt-1 sm:col-span-2">
+            <button class="btn btn-lg" type="submit" :disabled="saving">
+              {{ saving ? 'Saving…' : editing ? 'Save changes' : 'Create event' }}
+            </button>
+            <button v-if="editing" class="btn btn-secondary btn-lg" type="button" @click="resetForm">Cancel</button>
+          </div>
         </div>
       </form>
     </section>
 
-    <section class="mb-12">
-      <h2 ref="entriesEl" class="field-label mb-3 flex items-baseline justify-between">
-        <span>All entries</span>
-        <span v-if="pagination && pagination.total" class="day-count">
-          {{ pagination.total }} {{ pagination.total === 1 ? 'entry' : 'entries' }}
+    <section class="mb-10">
+      <div ref="entriesEl" class="mb-3 flex scroll-mt-20 items-baseline justify-between">
+        <h2 class="text-lg font-semibold">All events</h2>
+        <span v-if="pagination && pagination.total" class="text-sm text-ink-2">
+          {{ pagination.total }} {{ pagination.total === 1 ? 'event' : 'events' }}
         </span>
-      </h2>
+      </div>
 
-      <p v-if="loading" class="venue">Loading</p>
-      <p v-else-if="!events.length" class="venue">No events yet.</p>
+      <div class="card divide-y divide-line overflow-hidden">
+        <p v-if="loading" class="p-5 text-sm text-ink-2">Loading…</p>
+        <p v-else-if="!events.length" class="p-5 text-sm text-ink-2">No events yet. Create the first one above.</p>
 
-      <article v-for="event in events" :key="event._id" class="row">
-        <div class="col-main">
-          <span class="event-name block">{{ event.title }}</span>
-          <p class="venue">
-            {{ shortDate(event.date) }}<span v-if="timeRange(event.startTime, event.endTime)">, {{ timeRange(event.startTime, event.endTime) }}</span>
-            <span v-if="event.venueName">, {{ event.venueName }}</span>
-          </p>
-        </div>
+        <div v-for="event in events" :key="event._id" class="flex items-center gap-3 px-4 py-3 hover:bg-black/[0.02]">
+          <Cover :category="event.category" :seed="event._id" size="sm" class="h-11 w-11 shrink-0 rounded-md" />
 
-        <span class="leader" aria-hidden="true"></span>
+          <div class="min-w-0 flex-1">
+            <RouterLink :to="`/events/${event._id}`" class="block truncate font-medium hover:underline">{{ event.title }}</RouterLink>
+            <p class="truncate text-sm text-ink-2">
+              {{ shortDate(event.date) }}<template v-if="event.startTime">, {{ event.startTime }}</template><template v-if="event.venueName">, {{ event.venueName }}</template>
+            </p>
+          </div>
 
-        <div class="col-end">
-          <div>{{ priceLabel(event) }}, {{ event.confirmedCount }} / {{ event.capacity || 'no limit' }}</div>
-          <div class="flex gap-3 justify-end">
-            <button type="button" class="underline text-teal" @click="edit(event)">Edit</button>
-            <button type="button" class="underline text-ink-soft" @click="remove(event)">Delete</button>
+          <div class="hidden text-right sm:block">
+            <p class="text-sm font-medium tabular-nums">
+              {{ event.confirmedCount || 0 }}<span class="text-ink-3"> / {{ event.capacity || '∞' }}</span>
+            </p>
+            <p class="text-[13px] text-ink-2">{{ priceLabel(event) }}</p>
+          </div>
+
+          <div class="flex shrink-0 gap-0.5">
+            <button type="button" class="btn btn-ghost btn-icon" :aria-label="`Edit ${event.title}`" @click="edit(event)">
+              <Icon name="pencil" class="h-4 w-4" />
+            </button>
+            <button type="button" class="btn btn-ghost btn-icon hover:text-[#e5376b]" :aria-label="`Delete ${event.title}`" @click="remove(event)">
+              <Icon name="trash" class="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </article>
+      </div>
 
-      <nav v-if="pagination && pagination.pages > 1" class="pager" aria-label="Entry pages">
-        <button type="button" :disabled="paging || pagination.page === 1" @click="goTo(pagination.page - 1)">
-          Previous
+      <nav v-if="pagination && pagination.pages > 1" class="mt-3 flex items-center justify-between gap-3" aria-label="Event pages">
+        <button type="button" class="btn btn-secondary btn-sm" :disabled="paging || pagination.page === 1" @click="goTo(pagination.page - 1)">
+          <Icon name="arrow-left" class="h-3.5 w-3.5" />Previous
         </button>
-        <span>{{ rangeLabel }}, page {{ pagination.page }} of {{ pagination.pages }}</span>
-        <button type="button" :disabled="paging || pagination.page === pagination.pages" @click="goTo(pagination.page + 1)">
-          Next
+        <span class="text-sm tabular-nums text-ink-2">{{ rangeLabel }}</span>
+        <button type="button" class="btn btn-secondary btn-sm" :disabled="paging || pagination.page === pagination.pages" @click="goTo(pagination.page + 1)">
+          Next<Icon name="arrow-right" class="h-3.5 w-3.5" />
         </button>
       </nav>
     </section>
 
-    <section v-if="reports">
-      <h2 class="field-label mb-3">Reports</h2>
-
-      <div class="grid gap-6 sm:grid-cols-3 mb-8">
-        <div class="rule-top pt-3">
-          <p class="text-3xl font-medium">{{ reports.totalEvents }}</p>
-          <p class="venue">Events</p>
-        </div>
-        <div class="rule-top pt-3">
-          <p class="text-3xl font-medium">{{ reports.totalUsers }}</p>
-          <p class="venue">Registered people</p>
-        </div>
-        <div class="rule-top pt-3">
-          <p class="text-3xl font-medium">{{ reports.rsvpsByStatus.confirmed || 0 }}</p>
-          <p class="venue">Confirmed places</p>
-        </div>
+    <section v-if="reports" class="grid gap-3 md:grid-cols-2">
+      <div class="card p-5">
+        <h2 class="font-semibold">Events by category</h2>
+        <p v-if="!reports.eventsByCategory.length" class="mt-3 text-sm text-ink-2">No events yet.</p>
+        <ul class="mt-4 space-y-3">
+          <li v-for="row in reports.eventsByCategory" :key="row.category">
+            <div class="mb-1.5 flex items-center justify-between text-sm">
+              <span class="flex items-center gap-1.5 font-medium">
+                <Icon :name="categoryMeta(row.category).icon" class="h-4 w-4 text-ink-2" />{{ categoryMeta(row.category).label }}
+              </span>
+              <span class="tabular-nums text-ink-2">{{ row.count }}</span>
+            </div>
+            <div class="h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
+              <div
+                class="h-full rounded-full"
+                :style="{ width: `${(row.count / categoryMax) * 100}%`, background: coverGradient(row.category) }"
+              ></div>
+            </div>
+          </li>
+        </ul>
       </div>
 
-      <div class="grid gap-8 sm:grid-cols-2">
-        <div>
-          <h3 class="field-label mb-2">By category</h3>
-          <div v-for="row in reports.eventsByCategory" :key="row.category" class="row">
-            <span class="col-main tag">{{ row.category }}</span>
-            <span class="leader" aria-hidden="true"></span>
-            <span class="col-end">{{ row.count }}</span>
-          </div>
-        </div>
-
-        <div>
-          <h3 class="field-label mb-2">Best attended</h3>
-          <p v-if="!reports.topEvents.length" class="venue">No confirmed places yet.</p>
-          <div v-for="row in reports.topEvents" :key="row._id" class="row">
-            <span class="col-main">{{ row.title }}</span>
-            <span class="leader" aria-hidden="true"></span>
-            <span class="col-end">{{ row.guests }} guests</span>
-          </div>
-        </div>
+      <div class="card p-5">
+        <h2 class="font-semibold">Best attended</h2>
+        <p v-if="!reports.topEvents.length" class="mt-3 text-sm text-ink-2">No confirmed places yet.</p>
+        <ol class="mt-4 space-y-3">
+          <li v-for="(row, i) in reports.topEvents" :key="row._id" class="flex items-center gap-3">
+            <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-black/5 text-[13px] font-semibold text-ink-2">{{ i + 1 }}</span>
+            <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ row.title }}</span>
+            <span class="badge badge-green">{{ row.guests }} {{ row.guests === 1 ? 'guest' : 'guests' }}</span>
+          </li>
+        </ol>
       </div>
     </section>
   </div>

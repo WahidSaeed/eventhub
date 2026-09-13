@@ -71,17 +71,16 @@ watch(() => [props.lat, props.lng], render);
 
 <template>
   <div>
-    <div v-show="status === 'ready'" ref="mapEl" class="h-64 w-full border border-rule"></div>
+    <div v-show="status === 'ready'" ref="mapEl" class="h-64 w-full overflow-hidden rounded-xl border border-line"></div>
 
-    <p v-if="status === 'no-location'" class="event-meta">
-      This venue has not been placed on the map yet.
-    </p>
-    <p v-else-if="status === 'no-key'" class="event-meta">
-      Map unavailable: no browser Maps key is configured.
-    </p>
-    <p v-else-if="status === 'error'" class="event-meta">
-      The map could not be loaded.
-    </p>
-    <p v-else-if="status === 'loading'" class="event-meta">Loading map</p>
+    <div
+      v-if="status !== 'ready'"
+      class="grid h-32 place-items-center rounded-xl border border-dashed border-[rgba(19,21,23,0.14)] bg-white/50 px-4 text-center text-sm text-ink-2"
+    >
+      <template v-if="status === 'no-location'">This venue has not been placed on the map yet.</template>
+      <template v-else-if="status === 'no-key'">Map unavailable: no browser Maps key is configured.</template>
+      <template v-else-if="status === 'error'">The map could not be loaded.</template>
+      <template v-else>Loading map…</template>
+    </div>
   </div>
 </template>

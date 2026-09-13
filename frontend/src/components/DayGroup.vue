@@ -1,26 +1,23 @@
 <script setup>
-import RunningOrderRow from './RunningOrderRow.vue';
-import { dayHeading, listingCount } from '../utils/format';
+import { computed } from 'vue';
+import { dateParts, dayLabel } from '../utils/format';
 
-defineProps({
-  date: { type: [String, Date], required: true },
-  events: { type: Array, required: true },
-  startIndex: { type: Number, default: 1 }
+const props = defineProps({
+  date: { type: [String, Date], required: true }
 });
+
+const parts = computed(() => dateParts(props.date));
+const label = computed(() => dayLabel(props.date));
 </script>
 
 <template>
-  <section class="mt-10">
-    <h2 class="day-header">
-      <span>{{ dayHeading(date) }}</span>
-      <span class="day-count">{{ listingCount(events.length) }}</span>
+  <section class="tl-group">
+    <h2 class="tl-date">
+      <span class="text-[15px] font-semibold">{{ parts.month }} {{ parts.day }}</span>
+      <span class="text-[15px] font-normal text-ink-3">{{ label }}</span>
     </h2>
-
-    <RunningOrderRow
-      v-for="(event, i) in events"
-      :key="event._id"
-      :event="event"
-      :index="startIndex + i"
-    />
+    <div class="tl-items space-y-3">
+      <slot />
+    </div>
   </section>
 </template>

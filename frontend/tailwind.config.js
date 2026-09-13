@@ -3,16 +3,18 @@ export default {
   content: ['./index.html', './src/**/*.{vue,js}'],
   theme: {
     extend: {
+      // Mirrors the custom properties in src/assets/main.css.
       colors: {
-        paper: '#EDEAE1',
-        ink: '#1B1B1B',
-        'ink-soft': '#4A4A46',
-        teal: '#2F5D62',
-        rule: '#D8D3C6'
+        canvas: '#f4f5f6',
+        ink: {
+          DEFAULT: '#131517',
+          2: '#737577',
+          3: '#b3b5b7'
+        },
+        line: 'rgba(19, 21, 23, 0.08)'
       },
       fontFamily: {
-        display: ['Archivo', 'system-ui', 'sans-serif'],
-        serif: ['"Source Serif 4"', 'Georgia', 'serif']
+        sans: ['Inter', 'system-ui', '-apple-system', '"Segoe UI"', 'sans-serif']
       }
     }
   },

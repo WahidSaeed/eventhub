@@ -1,23 +1,22 @@
 <script setup>
 import { RouterView } from 'vue-router';
 import NavBar from './components/NavBar.vue';
-import { EDITION } from './config/edition';
+import { SITE } from './config/site';
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
+  <div class="flex min-h-screen flex-col">
     <NavBar />
 
-    <main class="shell flex-1">
-      <div class="vol-marker"><b>{{ EDITION.volume }}</b> Printed weekly in {{ EDITION.city }}</div>
+    <main class="flex-1">
       <RouterView />
     </main>
 
-    <div class="shell">
-      <footer class="foot">
-        <span>The Running Order is a listings platform, not a ticketing monopoly.</span>
-        <span>Sign in to save your RSVPs</span>
-      </footer>
-    </div>
+    <footer class="border-t border-line">
+      <div class="mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-2 px-4 py-6 text-[13px] text-ink-3 sm:px-6">
+        <span>{{ SITE.name }}, {{ SITE.city }}</span>
+        <span>Discover events and reserve your place.</span>
+      </div>
+    </footer>
   </div>
 </template>

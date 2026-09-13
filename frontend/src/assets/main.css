@@ -2,504 +2,554 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens. Mirrored in tailwind.config.js, so change them in both places. */
 :root {
-  --paper: #EDEAE1;
-  --ink: #1B1B1B;
-  --ink-soft: #4A4A46;
-  --teal: #2F5D62;
-  --rule: #D8D3C6;
+  --canvas: #f4f5f6;
+  --card: #ffffff;
+  --ink: #131517;
+  --ink-2: #737577;
+  --ink-3: #b3b5b7;
+  --line: rgba(19, 21, 23, 0.08);
+  --line-strong: rgba(19, 21, 23, 0.14);
+  --hover: rgba(19, 21, 23, 0.04);
+  --green: #0b9b64;
+  --amber: #c27803;
+  --rose: #e5376b;
 }
 
 @layer base {
   html {
-    background: var(--paper);
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    background: var(--paper);
+    margin: 0;
+    background: var(--canvas);
     color: var(--ink);
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 17px;
-    line-height: 1.55;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, nav, button, label, th, .display {
-    font-family: 'Archivo', system-ui, sans-serif;
+  /* A soft colour wash behind the top of every page. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 460px;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(55% 100% at 12% 0%, rgba(255, 150, 200, 0.2), transparent 70%),
+      radial-gradient(50% 90% at 88% 0%, rgba(130, 160, 255, 0.2), transparent 70%);
   }
 
-  a {
-    color: var(--teal);
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  /* Motion is off by default. The one deliberate moment is the RSVP
-     confirmation, which opts in explicitly via .confirm-in. */
-  *, *::before, *::after {
-    transition: none;
+  ::selection {
+    background: rgba(229, 55, 107, 0.18);
   }
 }
 
 @layer components {
-  .shell {
+  .page {
     width: 100%;
-    max-width: 920px;
+    max-width: 820px;
     margin: 0 auto;
-    padding: 0 32px 0 68px;
-    position: relative;
+    padding: 32px 16px 72px;
   }
 
-  /* Masthead and sub bar */
-  .masthead {
-    border-bottom: 3px solid var(--ink);
+  .page-wide {
+    max-width: 980px;
   }
 
-  .masthead-title {
-    color: var(--ink);
-    text-decoration: none;
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-weight: 800;
-    font-size: clamp(1.5rem, 4vw, 34px);
-    letter-spacing: -0.01em;
-    line-height: 1;
-    text-transform: uppercase;
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
+  .page-narrow {
+    max-width: 420px;
   }
 
-  .masthead-mark {
-    color: var(--teal);
-    font-size: 20px;
-    position: relative;
-    top: -2px;
+  @media (min-width: 640px) {
+    .page {
+      padding: 44px 24px 96px;
+    }
   }
 
-  .masthead-meta {
-    text-align: right;
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12px;
-    color: var(--ink-soft);
-    line-height: 1.6;
+  /* Navigation */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(244, 245, 246, 0.72);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
   }
 
-  .masthead-meta b {
-    color: var(--ink);
-    font-weight: 700;
+  .nav.is-scrolled {
+    border-bottom-color: var(--line);
   }
 
-  /* Account links sit above the edition block so the category rail below
-     stays a single uncrowded line. */
-  .masthead-account {
-    display: flex;
-    justify-content: flex-end;
-    gap: 18px;
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-
-  .masthead-account a,
-  .masthead-account button {
-    color: var(--ink-soft);
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .masthead-account a:hover,
-  .masthead-account button:hover {
-    color: var(--teal);
-    text-decoration: none;
-  }
-
-  .subbar {
-    border-bottom: 1px solid var(--rule);
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12.5px;
-    color: var(--ink-soft);
-  }
-
-  /* Borderless underline field, so filtering reads as part of the rail
-     rather than a boxed form. */
-  .find {
-    border: none;
-    border-bottom: 1px solid var(--ink-soft);
-    background: none;
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-style: italic;
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
     font-size: 14px;
-    padding: 2px 0;
-    width: 190px;
-    outline: none;
-    color: var(--ink);
-  }
-
-  .find::placeholder {
-    color: #9a968a;
-  }
-
-  .find-date {
-    width: 125px;
-    font-style: normal;
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12px;
-  }
-
-  .subbar-link {
-    color: var(--ink-soft);
-    padding: 12px 0;
-    display: inline-block;
-    cursor: pointer;
-  }
-
-  .subbar-link.is-active {
-    color: var(--ink);
-    border-bottom: 1px solid var(--teal);
-    padding-bottom: 9px;
-  }
-
-  /* Day grouping */
-  .day-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 16.5px;
-    letter-spacing: 0.005em;
-    border-bottom: 1.5px solid var(--ink);
-    padding-bottom: 9px;
-    margin-bottom: 2px;
-  }
-
-  .day-count {
     font-weight: 500;
-    color: var(--ink-soft);
-    font-size: 12px;
-    text-transform: none;
-    letter-spacing: 0;
+    color: var(--ink-2);
+    transition: color 0.15s, background-color 0.15s;
   }
 
-  /* The listing row: name on the left, time and places on the right, joined
-     by a dotted leader that absorbs the free space between them. */
-  .row {
+  .nav-link:hover,
+  .nav-link.router-link-exact-active {
+    color: var(--ink);
+  }
+
+  .menu-item {
     display: flex;
-    align-items: baseline;
-    gap: 12px;
-    padding: 18px 0;
-    border-bottom: 1px dashed var(--rule);
-  }
-
-  .row:last-child {
-    border-bottom: none;
-  }
-
-  .row-num {
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12px;
-    color: var(--ink-soft);
-    width: 26px;
-    flex-shrink: 0;
-    padding-top: 3px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .col-main {
-    flex-shrink: 0;
-    max-width: 300px;
-    min-width: 0;
-  }
-
-  /* Sits against the first line of each column so the dots run between the
-     event name and its time, not along the bottom of the whole row. */
-  .leader {
-    flex: 1;
-    border-bottom: 1px dotted var(--rule);
-    position: relative;
-    top: -6px;
-    min-width: 20px;
-  }
-
-  .col-end {
-    flex-shrink: 0;
-    text-align: right;
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12.5px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .col-end .time {
-    color: var(--ink-soft);
-  }
-
-  .col-end .price {
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 14px;
     color: var(--ink);
-    font-weight: 700;
-    margin-left: 10px;
-  }
-
-  .event-name {
-    font-size: 19px;
-    font-weight: 500;
-    color: var(--ink);
-  }
-
-  .event-name a,
-  a.event-name {
-    color: var(--ink);
-    text-decoration: none;
-  }
-
-  .event-name a:hover,
-  a.event-name:hover {
-    text-decoration: none;
-    border-bottom: 1px solid var(--teal);
-  }
-
-  .venue {
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12px;
-    color: var(--ink-soft);
-    margin-top: 3px;
-  }
-
-  .event-meta {
-    font-size: 0.9375rem;
-    color: var(--ink-soft);
-  }
-
-  .tag {
-    display: inline-block;
-    margin-top: 7px;
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 10.5px;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--teal);
-    font-weight: 700;
-    border-left: 2px solid var(--teal);
-    padding-left: 6px;
-  }
-
-  /* Form and button primitives, kept flat and squared off */
-  .field {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--rule);
-    padding: 0.5rem 0.625rem;
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 1rem;
-    color: var(--ink);
-  }
-
-  .field:focus {
-    outline: none;
-    border-color: var(--teal);
-    box-shadow: inset 0 0 0 1px var(--teal);
-  }
-
-  .field-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-  }
-
-  .btn {
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--paper);
-    cursor: pointer;
-  }
-
-  .btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .btn-quiet {
-    background: transparent;
-    color: var(--ink);
-  }
-
-  .btn-teal {
-    background: var(--teal);
-    border-color: var(--teal);
-    color: var(--paper);
-  }
-
-  .notice {
-    border-left: 2px solid var(--teal);
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9375rem;
-    color: var(--ink-soft);
-  }
-
-  .notice-error {
-    border-left-color: #8A2B22;
-    color: #8A2B22;
-  }
-
-  /* Previous and next for the editor's archive, set like a page footer. */
-  .pager {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 4px;
-    padding-top: 14px;
-    border-top: 1px solid var(--ink);
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12.5px;
-    color: var(--ink-soft);
-  }
-
-  .pager button {
-    color: var(--teal);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
-  }
-
-  .pager button:disabled {
-    color: var(--rule);
-    text-decoration: none;
-    cursor: default;
-  }
-
-  .rule-top {
-    border-top: 1px solid var(--rule);
-  }
-
-  .vol-marker {
-    position: absolute;
-    left: 0;
-    top: 120px;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-    white-space: nowrap;
-  }
-
-  .vol-marker b {
-    color: var(--teal);
-    font-weight: 700;
-  }
-
-  .foot {
-    margin-top: 48px;
-    padding: 22px 0 40px;
-    border-top: 1px solid var(--rule);
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 12px;
-    color: var(--ink-soft);
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-}
-
-/* The single deliberate motion moment: RSVP confirmation. */
-@keyframes confirm-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
-}
-
-.confirm-in {
-  animation: confirm-in 400ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .confirm-in { animation: none; }
-}
-
-/* Mobile listing: the leader line has no room to read as a leader at this
-   width, so the right hand column stacks under the name instead of being
-   crushed against it. */
-@media (max-width: 640px) {
-  /* The vertical edition marker needs a 68px gutter it cannot earn on a
-     phone, so it is dropped and the gutter comes back as content width. */
-  .shell {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .vol-marker {
-    display: none;
-  }
-
-  .masthead {
-    padding-bottom: 12px;
-  }
-
-  .col-main {
-    max-width: none;
-  }
-
-  .row {
-    flex-wrap: wrap;
-    row-gap: 0.25rem;
-  }
-
-  .row .leader {
-    display: none;
-  }
-
-  .row .col-main {
-    flex: 1 1 100%;
-  }
-
-  .row .col-end {
-    flex: 1 1 100%;
     text-align: left;
   }
 
-  /* Keep the right hand details on one line once they are left aligned. */
-  .row .col-end > div {
-    display: inline;
+  .menu-item:hover {
+    background: var(--hover);
   }
 
-  .row .col-end > div + div::before {
-    content: ', ';
-  }
-
-  .row .col-end .flex {
+  /* Buttons */
+  .btn {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--ink);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, opacity 0.15s;
   }
 
-  .row .col-end .flex::before {
-    content: '';
+  .btn:hover {
+    background: #333537;
   }
 
-  /* The date and search fields share the rail width on a phone instead of
-     holding their desktop widths and running past the gutter. */
-  .subbar-find {
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: rgba(19, 21, 23, 0.05);
+    color: var(--ink);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(19, 21, 23, 0.09);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-2);
+  }
+
+  .btn-ghost:hover {
+    background: var(--hover);
+    color: var(--ink);
+  }
+
+  .btn-sm {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
+    border-radius: 7px;
+  }
+
+  .btn-lg {
+    height: 44px;
+    padding: 0 20px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  .btn-block {
     width: 100%;
-    padding-bottom: 10px;
   }
 
-  .subbar-find .find {
-    flex: 1 1 0;
-    min-width: 0;
-    width: auto;
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
   }
 
-  .masthead-title {
-    letter-spacing: -0.01em;
+  /* Surfaces */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  .card-hover {
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .card-hover:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 6px 24px rgba(19, 21, 23, 0.06);
+  }
+
+  .card:has(.stretched:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  /* Makes a link inside a card cover the whole card. */
+  .stretched::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-2);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Forms */
+  .label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .input {
+    display: block;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    color: var(--ink);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  textarea.input {
+    height: auto;
+    padding: 10px 12px;
+    resize: vertical;
+  }
+
+  select.input {
+    appearance: none;
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737577' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+  }
+
+  .input::placeholder {
+    color: var(--ink-3);
+  }
+
+  .input:focus {
+    border-color: rgba(19, 21, 23, 0.4);
+    box-shadow: 0 0 0 3px rgba(19, 21, 23, 0.06);
+  }
+
+  .hint {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+
+  .no-spin {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  .no-spin::-webkit-inner-spin-button,
+  .no-spin::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Small labels and controls */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink-2);
+    font-size: 13.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  }
+
+  .chip:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .chip.is-active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+
+  .tabs {
+    display: inline-flex;
+    padding: 2px;
+    border-radius: 9px;
+    background: rgba(19, 21, 23, 0.05);
+  }
+
+  .tab {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 7px;
+    color: var(--ink-2);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .tab.is-active {
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(19, 21, 23, 0.08);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: rgba(19, 21, 23, 0.05);
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .badge-green {
+    background: rgba(11, 155, 100, 0.1);
+    color: var(--green);
+  }
+
+  .badge-amber {
+    background: rgba(236, 151, 6, 0.12);
+    color: var(--amber);
+  }
+
+  .badge-rose {
+    background: rgba(229, 55, 107, 0.1);
+    color: var(--rose);
+  }
+
+  .icon-tile {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink-2);
+  }
+
+  .date-tile {
+    flex-shrink: 0;
+    width: 40px;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    text-align: center;
+  }
+
+  .date-tile-month {
+    padding: 1px 0;
+    background: rgba(19, 21, 23, 0.04);
+    color: var(--ink-2);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .date-tile-day {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+  }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 999px;
+    color: #fff;
+    font-weight: 600;
+    background: linear-gradient(135deg, #ff8a65 0%, #e5376b 50%, #8e5cff 100%);
+  }
+
+  .notice {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(11, 155, 100, 0.08);
+    color: var(--green);
+    font-size: 14px;
+  }
+
+  .notice-error {
+    background: rgba(229, 55, 107, 0.08);
+    color: var(--rose);
+  }
+
+  /* Generated event cover */
+  .cover {
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(80% 60% at 20% 12%, rgba(255, 255, 255, 0.35), transparent 60%),
+      radial-gradient(70% 60% at 90% 100%, rgba(0, 0, 0, 0.14), transparent 70%);
+  }
+
+  /* Timeline: date column on the left, a dashed rail, then the day's cards. */
+  .tl-group {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tl-date {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-bottom: 12px;
+  }
+
+  .tl-items {
+    position: relative;
+    padding-bottom: 32px;
+  }
+
+  @media (min-width: 768px) {
+    .tl-group {
+      grid-template-columns: 132px minmax(0, 1fr);
+      column-gap: 36px;
+    }
+
+    .tl-date {
+      position: sticky;
+      top: 76px;
+      align-self: start;
+      flex-direction: column;
+      gap: 0;
+      padding-bottom: 0;
+    }
+
+    .tl-items::before {
+      content: '';
+      position: absolute;
+      left: -19px;
+      top: 16px;
+      bottom: -8px;
+      border-left: 1.5px dashed rgba(19, 21, 23, 0.12);
+    }
+
+    .tl-items::after {
+      content: '';
+      position: absolute;
+      left: -23px;
+      top: 7px;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--ink-3);
+      box-shadow: 0 0 0 4px var(--canvas);
+    }
+
+    .tl-group:last-child .tl-items::before {
+      bottom: 32px;
+    }
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* The one deliberate animation: the RSVP confirmation. */
+  .pop-in {
+    animation: pop-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop-in {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
   }
 }

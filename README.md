@@ -178,37 +178,35 @@ so filtering by the date shown on the listing returned nothing.
 
 ## Design
 
-The interface follows `design-mockup-v3.html`, a printed festival programme rather
-than a dashboard. Events are one column, grouped by day, numbered continuously,
-with a dotted leader joining each name to its start time and price. The palette is
-paper, ink and a single teal accent used only for interactive or informational
-moments. Type is Archivo for headings and controls, Source Serif 4 for body copy.
+The interface is a clean, card-based event app in the style of modern event
+platforms such as Luma: a soft grey canvas with a faint colour wash at the top,
+white rounded cards, the Inter typeface, and dark buttons with subtle hover
+states. It replaces the original printed-programme direction from
+`docs/design-mockup-v3.html`, which is kept in `docs/` for reference.
 
-Tokens live in `frontend/src/assets/main.css` as CSS custom properties and are
-mirrored into `frontend/tailwind.config.js`, so change them in both places. Motion
-is off by default; the one exception is the RSVP confirmation, which respects
+- **Discover** (`/`) lists events on a timeline: the date and weekday sit in a
+  sticky left column joined by a dashed rail, and each event is a card with its
+  time, venue, price and availability badges and a square cover. Upcoming and
+  Past tabs, live search, a date picker and category chips filter the list.
+- **Event page** puts a large cover, the host and attendance on the left, and
+  the title, a date tile, the venue, a registration card, the description and
+  the map on the right. On phones the columns stack with the cover first.
+- **Your events** uses the same timeline for the visitor's own RSVPs, with
+  Going or Waitlist badges and a cancel action, followed by account settings.
+- **Editor** has stat cards, an event form with a live cover preview, a compact
+  paginated event list with edit and delete actions, and report cards.
+
+Events have no uploaded images, so `Cover.vue` draws each cover as a gradient
+chosen from the event's category, varied per event, with the category icon on
+top. Categories, their labels, icons and gradients live in
+`frontend/src/utils/categories.js`.
+
+Tokens are CSS custom properties in `frontend/src/assets/main.css`, mirrored in
+`frontend/tailwind.config.js` as `canvas`, `ink`, `ink-2`, `ink-3` and `line`,
+so change them in both places. Shared pieces such as `.btn`, `.card`, `.chip`,
+`.tabs`, `.badge` and `.input` are defined there as Tailwind components. The
+only animation is the RSVP confirmation, and it respects
 `prefers-reduced-motion`.
-
-Category filtering and search sit in the rail under the masthead as borderless
-underline controls, rather than in a boxed filter panel, so the listing keeps
-reading as a printed page. Account links sit in the masthead corner to keep that
-rail to one line.
-
-Below 640px the dotted leader is hidden, the time and price stack under the event
-name, and the vertical edition marker is dropped so its 68px gutter returns to
-content.
-
-### Two decisions where the plan and the mockup disagreed
-
-The mockup was treated as the authority in both cases, since section 10 defines
-done as matching it.
-
-- **Tracked-out ALL-CAPS labels.** Section 4 bans them, but the mockup uses them
-  for the teal row tag and the vertical edition marker. The mockup won, so that
-  rule is deliberately overridden in those two places only.
-- **Price.** The mockup shows a price on every row but the section 2 schema has no
-  such field, so `price` was added to the Event model, the create and update
-  routes, the admin form and the seed data.
 
 ## Security
 
@@ -229,7 +227,7 @@ backend/     Express API, Mongoose models, JWT auth, SendGrid and Geocoding serv
   app.js     The Express app, importable without a database or port
   server.js  Connects to MongoDB and starts listening
   tests/     node:test suite, run with npm test
-docs/        The approved design mockup and the original build plan
+docs/        The original design mockup and build plan, kept for reference
 frontend/    Vue 3, Vue Router, Pinia, Tailwind, built by Vite
 docker/      supervisord config running mongod and node together
 Dockerfile   Multi-stage: builds the frontend, then the runtime image
